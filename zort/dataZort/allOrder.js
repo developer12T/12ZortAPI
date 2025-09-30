@@ -13,8 +13,8 @@ const orderDataAll = async (req,res) => {
     const currentDate = new Date();
     const formattedDate = formatDate(currentDate);
 
-    // const response = await axios.get(process.env.zortapiopenurlOrder+`?Orderdateafter=${formattedDate}&status=0,1,3`, {
-    const response = await axios.get(process.env.zortapiopenurlOrder+'?Orderdateafter=2023-08-09&status=0,1,3', {
+    const response = await axios.get(process.env.zortapiopenurlOrder+`?OrderdateafteraddOrderBydate=${formattedDate}&status=0,1,3`, {
+    // const response = await axios.get(process.env.zortapiopenurlOrder+'?Orderdateafter=2025-05-31&status=0,1,3', {
     // const response = await axios.get('https://open-api.zortout.com/v4/Order/GetOrderDetail?id=183382819', {
         headers: {
           storename: process.env.zortstorename,

@@ -192,11 +192,22 @@ getDataPrintReceipt.post('/getDataPrintReceipt', async (req, res) => {
         }
         for (let detail of order.orderDetails) {
           if (detail.productid !== 8888888) {
+            const [sku, flag] = detail.sku.split('_');
+          if (flag === "Free") {
+            const sku = detail.sku.split('_')[0];
+            const item = await axios.post(process.env.API_URL + '/M3API/ItemManage/Item/getItem', {
+              itemcode: sku
+            });
+            detail.name = '(สินค้าโปรโมชั่นแจกฟรี) '+item.data[0].itemname;
+
+          }else{
             const sku = detail.sku.split('_')[0];
             const item = await axios.post(process.env.API_URL + '/M3API/ItemManage/Item/getItem', {
               itemcode: sku
             });
             detail.name = item.data[0].itemname;
+          }
+           
           }
         }
       }
@@ -331,11 +342,23 @@ getDataPrintReceipt.post('/getDataPrintReceiptErp', async (req, res) => {
       }
       for (let detail of order.orderDetailSuccessInsM3s) {
         if (detail.productid !== 8888888) {
-          const sku = detail.sku.split('_')[0];
-          const item = await axios.post(process.env.API_URL + '/M3API/ItemManage/Item/getItem', {
-            itemcode: sku
-          });
-          detail.name = item.data[0].itemname;
+
+            const [sku, flag] = detail.sku.split('_');
+          if (flag === "Free") {
+            const sku = detail.sku.split('_')[0];
+            const item = await axios.post(process.env.API_URL + '/M3API/ItemManage/Item/getItem', {
+              itemcode: sku
+            });
+            detail.name = '(สินค้าโปรโมชั่นแจกฟรี) '+item.data[0].itemname;
+
+          }else{
+            const sku = detail.sku.split('_')[0];
+            const item = await axios.post(process.env.API_URL + '/M3API/ItemManage/Item/getItem', {
+              itemcode: sku
+            });
+            detail.name = item.data[0].itemname;
+          }
+
         }
       }
     }
@@ -401,11 +424,21 @@ getDataPrintReceipt.post('/getDataPrintReceiptSuccess', async (req, res) => {
       }
       for (let detail of order.orderDetails) {
         if (detail.productid !== 8888888) {
-          const sku = detail.sku.split('_')[0];
-          const item = await axios.post(process.env.API_URL + '/M3API/ItemManage/Item/getItem', {
-            itemcode: sku
-          });
-          detail.name = item.data[0].itemname;
+          const [sku, flag] = detail.sku.split('_');
+          if (flag === "Free") {
+            const sku = detail.sku.split('_')[0];
+            const item = await axios.post(process.env.API_URL + '/M3API/ItemManage/Item/getItem', {
+              itemcode: sku
+            });
+            detail.name = '(สินค้าโปรโมชั่นแจกฟรี) '+item.data[0].itemname;
+
+          }else{
+            const sku = detail.sku.split('_')[0];
+            const item = await axios.post(process.env.API_URL + '/M3API/ItemManage/Item/getItem', {
+              itemcode: sku
+            });
+            detail.name = item.data[0].itemname;
+          }
         }
       }
     }

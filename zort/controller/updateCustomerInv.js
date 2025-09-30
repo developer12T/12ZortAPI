@@ -28,6 +28,7 @@ updateCustomerInv.put('/updateCustomerInv', async (req, res) => {
     const orderTaxShopee = []
     const orderTaxTikTok = []
     const orderTaxMakro = []
+    const orderTaxAmaze = []
 
     for (const item of data) {
       if (item.saleschannel === "Lazada") {
@@ -38,6 +39,9 @@ updateCustomerInv.put('/updateCustomerInv', async (req, res) => {
         orderTaxTikTok.push(item)
       } else if (item.saleschannel === "Makro") {
         orderTaxMakro.push(item)
+      }
+      else if (item.saleschannel === "Amaze") {
+        orderTaxAmaze.push(item)
       }
     }
 
@@ -504,6 +508,122 @@ updateCustomerInv.put('/updateCustomerInv', async (req, res) => {
 
       }
       // console.log('update', updatedCustomers)
+
+      if (updatedCustomers.length > 0) {
+        for (const updatedCustomer of updatedCustomers) {
+          await Customer.update(
+            { customercode: updatedCustomer.newCustomerCode },
+            { where: { customeriderp: updatedCustomer.customerid } }
+          );
+
+          await Order.update(
+            { customeriderp: updatedCustomer.newCustomerCode },
+            { where: { id: updatedCustomer.orderid } }
+          );
+        }
+
+      }
+
+      // res.json({
+      //   message: "Makro customer update completed",
+      //   updatedCustomers
+      // });
+    } else if (orderTaxAmaze.length > 0) {
+      console.log('update amaze cus')
+      let updatedCustomers = [];
+
+      for (let i = 0; i < orderTaxAmaze.length; i++) {
+        const response = await axios.post(process.env.API_URL + '/M3API/OrderManage/order/getCustomerInv', {
+          customertype: '107',
+          customercode: 'OAMZ'
+        });
+
+        function incrementCustomerCode(code) {
+          let number = parseInt(code, 10) + 1;
+          let newCode = number.toString();
+          while (newCode.length < code.length) {
+            newCode = '0' + newCode;
+          }
+          return newCode;
+        }
+
+        const restdata = response.data[0];
+        const customerCode = restdata.customercode;
+        const numericPart = customerCode.slice(4);
+        const newNumericPart = incrementCustomerCode(numericPart);
+        const newCustomerCode = 'OAMZ' + newNumericPart;
+
+        // console.log('response', response)
+        // console.log('restdata', restdata)
+        // console.log('newCustomerCode', newCustomerCode)
+        const chunk1 = orderTaxAmaze[i].customeraddress.substring(0, 35);
+        const chunk2 = orderTaxAmaze[i].customeraddress.substring(35, 70);
+        const chunk3 = orderTaxAmaze[i].customeraddress.substring(70, 105);
+        const chunk4 = orderTaxAmaze[i].customername.substring(35, 69);
+
+        const shchunk1 = orderTaxAmaze[i].shippingaddress.substring(0, 35);
+        const shchunk2 = orderTaxAmaze[i].shippingaddress.substring(35, 70);
+        const shchunk3 = orderTaxAmaze[i].shippingaddress.substring(70, 105);
+        const shchunk4 = orderTaxAmaze[i].shippingaddress.substring(105, 140);
+
+        const idCus = await Customer.findAll({
+          where: {
+            customeriderp: orderTaxAmaze[i].customerid,
+            customercode: { [Op.or]: [null, ""] }
+          }
+        });
+        if (idCus.length > 0) {
+
+          const query = `
+              INSERT INTO [dbo].[data_customer] (
+                  companycode, customercode, customertype, searchkey, customername, address1,
+                  address2, address3, address4, phone, salecode, ordertype,
+                  warehouse, zone, payer, postcode, area, route,
+                  shoptype, taxno, provincecode,
+                  town, channel, status, insert_at) 
+              VALUES (:value1, :value2, :value3, :value4, :value5, :value6, :value7, :value8, :value9, :value10, :value11, :value12, :value13, :value14, :value15,
+                      :value16, :value18, :value19, :value21, :value22, :value23, :value24, :value27, :value28, :value29);
+      
+              INSERT INTO [dbo].[data_address] (companycode, customercode, address1, address2, address3, address4, postcode,
+                                                provincecode, phone, taxno) 
+              VALUES (:value1, :value2, :value30, :value31, :value32, :value33, :value34, :value23, :value36, :value22);
+          `;
+
+          const replacements = {
+            value1: 410, value2: newCustomerCode, value3: '107', value4: orderTaxAmaze[i].customername.substring(0, 10),
+            value5: orderTaxAmaze[i].customername.substring(0, 34), value6: chunk1, value7: chunk2, value8: chunk3,
+            value9: chunk4, value10: orderTaxAmaze[i].customerphone, value11: '11002', value12: '071', value13: '108',
+            value14: 'ON', value15: 'O00000001', value16: orderTaxAmaze[i].customerpostcode, value18: 'ON101',
+            value19: 'R', value21: '', value22: orderTaxAmaze[i].customeridnumber.substring(0, 13),
+            value23: orderTaxAmaze[i].customerpostcode.toString().substring(0, 2), value24: '', value27: 'ONLINE',
+            value28: 0, 
+            value29: moment().format('YYYY-MM-DD'), 
+            value30: shchunk1, 
+            value31: shchunk2,
+            value32: shchunk3, 
+            value33: shchunk4, 
+            value34: orderTaxAmaze[i].shippingpostcode,
+            value35: orderTaxAmaze[i].shippingpostcode, 
+            value36: orderTaxAmaze[i].customerphone
+          };
+
+          await sequelize.query(query, {
+            replacements,
+            type: sequelize.QueryTypes.INSERT
+          });
+
+          const addCusm3 = await axios.post(process.env.API_URL + '/M3API/OrderManage/order/addOnlineCustomerM3', {}, {});
+
+          updatedCustomers.push({
+            orderid: orderTaxAmaze[i].orderid,
+            customerid: orderTaxAmaze[i].customerid,
+            newCustomerCode: newCustomerCode
+          });
+
+        }
+
+      }
+       console.log('update', updatedCustomers)
 
       if (updatedCustomers.length > 0) {
         for (const updatedCustomer of updatedCustomers) {

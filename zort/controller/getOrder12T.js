@@ -10,6 +10,7 @@ const invSuccessTab = require('../subController/InvSuccessTab');
 const M3WaitTab = require('../subController/M3WaitTab');
 const M3SuccessTab = require('../subController/M3SuccessTab');
 const ReceiptWaitTabPayment = require('../subController/ReceiptWaitTabPayment');
+const InvReprint = require('../subController/InvReprint');
 const { Order, OrderHis, OrderDetailHis } = require('../model/Order');
 const { Customer } = require('../model/Customer');
 
@@ -41,6 +42,12 @@ getOrder12T.post('/getOrder', async (req, res) => {
             } else if (tab == 'success-tab') {
                 M3SuccessTab(res).then(orders => { res.json(orders); })
             }
+        }else if (page == 'reprint') {
+            // รับพารามิเตอร์วันที่จาก request body
+            const { startDate, endDate } = req.body;
+            const dateFilter = { startDate, endDate };
+            
+            InvReprint(res, dateFilter).then(orders => { res.json(orders); })
         }
     } catch (error) {
         res.status(500).json('invalid data')

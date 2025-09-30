@@ -34,7 +34,23 @@ async function receiptWaitTab(res) {
                 where: { id: data[i].id }
             });
 
-            const cusdata = await Customer.findAll({
+         let cusdata
+          if((data[i].customeriderp === 'OLAZ000000' && data[i].saleschannel === 'Lazada') || data[i].customeriderp === 'OAMZ000000' && data[i].saleschannel === 'Amaze'){
+             cusdata = await Customer.findAll({
+                attributes: ['customername', 'customerid', 'customeriderp', 'customercode'],
+                // where: {
+                //     [Op.or]: [
+                //         { customerid: data[i].saleschannel === "Makro" ? null : data[i].customerid },
+                //         { customeriderp: data[i].saleschannel === "Makro" ? data[i].customerid : null }
+                //     ]
+                // }
+                where: {
+                    // customercode: data[i].customeriderp 
+                    customerid: data[i].customerid
+                }
+            });
+          }else{
+             cusdata = await Customer.findAll({
                 attributes: ['customername', 'customerid', 'customeriderp', 'customercode'],
                 // where: {
                 //     [Op.or]: [
@@ -46,7 +62,8 @@ async function receiptWaitTab(res) {
                     customercode: data[i].customeriderp 
                 }
             });
-
+          }
+           
             const cuss = cusdata[0]?.customername || '';
             // console.log('cuss', cuss);
 

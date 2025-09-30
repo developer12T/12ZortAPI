@@ -188,6 +188,48 @@ const OrderDetailHis = sequelize.define('orderDetailSuccessInsM3', {
   integrationVariantId: { type: DataTypes.STRING, collate: 'Thai_CI_AS', allowNull: true, },
 }, { freezeTableName: true, timestamps: false, createdAt: false, updatedAt: false, primaryKey: false })
 
+const LogOrderInSuccessM3 = sequelize.define('logOrderInSuccessM3', {
+  runId: { 
+    type: DataTypes.INTEGER, 
+    allowNull: false, 
+    primaryKey: true, 
+    autoIncrement: true 
+  },
+  setNo: { 
+    type: DataTypes.INTEGER, 
+    allowNull: false, 
+    primaryKey: true 
+  },
+  cono: { 
+    type: DataTypes.STRING, 
+    allowNull: true 
+  },
+  invno: { 
+    type: DataTypes.STRING, 
+    allowNull: true 
+  },
+  cuscode: { 
+    type: DataTypes.STRING, 
+    allowNull: true 
+  },
+  numberOrderRef: { 
+    type: DataTypes.STRING, 
+    allowNull: true 
+  },
+  customerid: { 
+    type: DataTypes.STRING, 
+    allowNull: true 
+  },
+  dateInsert: { 
+    type: DataTypes.STRING, 
+    allowNull: false, 
+  }
+}, { 
+  freezeTableName: true, 
+  timestamps: false 
+});
+
+
 Order.hasMany(OrderDetail, {
   foreignKey: 'id',
   targetKey: 'id',
@@ -199,4 +241,4 @@ OrderHis.hasMany(OrderDetailHis, {
 });
 
 // sequelize.sync({force:false,alter:false}) 
-module.exports = { Order, OrderDetail, OrderHis, OrderDetailHis };
+module.exports = { Order, OrderDetail, OrderHis, OrderDetailHis,LogOrderInSuccessM3 };

@@ -1,7 +1,7 @@
 const express = require('express');
 const DasboardView = express.Router();
 const { sequelize } = require('../config/database')
-const { Order } = require('../model/Order')
+const { Order,OrderHis } = require('../model/Order')
 const { Op } = require('sequelize');
 const { Customer } = require('../model/Customer')
 const axios = require('axios')
@@ -9,7 +9,33 @@ const { Product } = require('../model/Product')
 DasboardView.post('/getData', async (req, res) => {
 
     try {
-        
+
+        const orders = await OrderHis.findAll({ raw: true });
+        const grouped = orders.reduce((acc, order) => {
+            // parse string format dd/MM/yyyy
+            const [year, month, day] = order.updatedatetime.split(' ')[0].split('-');
+            const yearInt = parseInt(year, 10);
+          
+            if (!acc[yearInt]) {
+              acc[yearInt] = {
+                yearOrder: yearInt,
+                countMakro: 0,
+                countShopee: 0,
+                countLazada: 0,
+                countAmaze: 0
+              };
+            }
+          
+            if (order.saleschannel === 'Makro') acc[yearInt].countMakro++;
+            if (order.saleschannel === 'Shopee') acc[yearInt].countShopee++;
+            if (order.saleschannel === 'Lazada') acc[yearInt].countLazada++;
+            if (order.saleschannel === 'Amaze') acc[yearInt].countAmaze++;
+          
+            return acc;
+          }, {});
+          const result = Object.values(grouped).sort((a, b) => a.yearOrder - b.yearOrder);
+          console.log(result);
+
         const countOrderAll = await Order.count({where:{status:{[Op.not]:'Voided'}}}) ;
      
         const countOrderShopee = await Order.count({where:{saleschannel:'Shopee',status:{[Op.not]:'Voided'}}}) ;
@@ -71,6 +97,7 @@ DasboardView.post('/getData', async (req, res) => {
 
 
         res.json([{
+            'CountByYear':result,
             'CountOrderAll':countOrderAll,
             'OrderCountShopee':countOrderShopee,
             'OrderCountLazada':countOrderLazada,
@@ -79,7 +106,6 @@ DasboardView.post('/getData', async (req, res) => {
             'StockZort':StockZort,    
             'WarStock':StockZortout,    
             'StockM3':countStockM3,  
-
             'InvLastno':lastInvThrust,
             'conoLastno':conoM3,
             'cuscodeOspeLastno':OSPENO,

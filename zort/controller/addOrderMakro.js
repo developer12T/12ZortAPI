@@ -55,9 +55,9 @@ const formatDate = (isoDate) => {
 };
 
 
+
 addOrderMakro.put('/addOrderMakroPro', async (req, res) => {
     try {
-
         const dataMakro = await orderMakroAll();
         if (!dataMakro || !dataMakro.orders) {
             return res.status(400).json({ message: "ข้อมูลไม่ถูกต้อง" });
@@ -103,8 +103,6 @@ addOrderMakro.put('/addOrderMakroPro', async (req, res) => {
                 const [year, month, day] = date.split('/')
                 const finalDate = `${day}-${month}-${year}T${time}`
 
-
-
                 const newOrderId = await generateUniqueId();
                 const newCustomerId = await generateCustomerId();
                 const shipping = order.customer.shipping_address || {};
@@ -145,9 +143,10 @@ addOrderMakro.put('/addOrderMakroPro', async (req, res) => {
                     }
                     if (customer) {
                         customercode = customer.customercode || ''
-                        newCustomerId = customer.customerid
+                        // newCustomerId = customer.customerid
                     }
                 }
+                
                 if (customerTaxId) {
                     customersToUpdate.push({
                         orderid: newOrderId,
@@ -182,12 +181,12 @@ addOrderMakro.put('/addOrderMakroPro', async (req, res) => {
                     cono: 1,
                     invno: '1',
                     ordertype: '0',
-                    customerid: newCustomerId,
+                    customerid: customer ? customer.customerid : newCustomerId,
                     customeriderp: customerTaxId ? customercode : "OMKP000000",
                     status: order.order_state,
                     paymentstatus: order.references.order_reference_for_customer || '',
                     amount: order.total_price,
-                    vatamount: (order.total_price / 1.07).toFixed(2),
+                    vatamount: ((order.total_price - (order.total_price / 1.07))).toFixed(2),
                     shippingamount: order.shipping_price,
                     // shippingdate: order.shipping_deadline,
                     shippingname: `${billing.firstname || ""} ${billing.lastname || ""}`.trim(),
@@ -215,7 +214,6 @@ addOrderMakro.put('/addOrderMakroPro', async (req, res) => {
                     // createdatetimeString: order.created_date,
                     // updatedatetime: order.created_date,
                     // updatedatetimeString: order.created_date,
-
                     createdatetime: finalDate,
                     createdatetimeString: finalDate,
                     updatedatetime: finalDate,
@@ -269,7 +267,7 @@ addOrderMakro.put('/addOrderMakroPro', async (req, res) => {
         console.log(error)
         res.status(500).json(error)
     }
-
 });
+
 
 module.exports = addOrderMakro;    
