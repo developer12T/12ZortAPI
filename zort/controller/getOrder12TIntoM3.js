@@ -18,23 +18,30 @@ getOrder12TIntoM3.post('/getOrder12TIntoM3', async (req, res) => {
 
     const action = req.body.action
     const action2 = req.body.action2
+    const { date } = req.body;
+
+    const whereClause = {
+        [Op.or]: [
+            { statusPrininvSuccess: '001' },
+            { statusPrininvSuccess: '002' },
+            { statusprint: '001' },
+            { statusprint: '002' },
+        ],
+        totalprint: { [Op.gte]: 1 },
+    };
+
+    // ✅ add date filter only if provided
+    if (date) {
+        whereClause.updatedatetime = date; // direct string compare
+    }
+
 
     try {
 
         if (action2 == 'moveorder') {
 
             const data2 = await Order.findAll({
-                where: {
-                    [Op.or]: [
-                        { statusPrininvSuccess: '001' },
-                        { statusPrininvSuccess: '002' },
-                        { statusprint: '001' },
-                        { statusprint: '002' },
-                    ],
-                    totalprint: {
-                        [Op.gte]: 1
-                    }
-                }
+                where: whereClause,
             });
             if (action == 'InsertM3') {
                 //   for (let i = 0; i < data.length; i++) {

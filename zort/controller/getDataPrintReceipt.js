@@ -169,8 +169,10 @@ getDataPrintReceipt.post('/getDataPrintReceipt', async (req, res) => {
 
       }
       if (req.body.action == 'lastRowActionToDataErp') {
+        const response = await axios.post(process.env.API_URL + '/M3API/OrderManage/order/addOrderErp');
+        console.log('ERP Response:', response.data);
 
-        const response = await axios.post(process.env.API_URL + '/M3API/OrderManage/order/addOrderErp', {}, {});
+        // const response = await axios.post(process.env.API_URL + '/M3API/OrderManage/order/addOrderErp', {}, {});
       }
       //console.log('1 :::::::' + data[0].orderDetails[0].name);
 

@@ -54,6 +54,120 @@ const formatDate = (isoDate) => {
     return isoDate ? new Date(isoDate).toISOString().split("T")[0] : null;
 };
 
+addOrderMakro.get('/addOrderMakroProDetailFix', async (req, res) => {
+    try {
+
+        const orderIds = [
+            'MAKROPRO25045383B',
+            'MAKROPRO25217875B',
+            'MAKROPRO25200397B'
+        ];
+
+        // ✅ แปลงให้ทุกตัวมี "-A" ต่อท้าย
+        const convertedIds = orderIds.map(id => `${id}-A`);
+
+        // ✅ รวมเป็น comma-separated string
+        const orderIdsParam = convertedIds.join(',');
+
+        console.log('Order IDs:', orderIdsParam);
+
+        const response = await axios.get(process.env.urlMakro + `/api/orders?order_ids=${orderIdsParam}`, {
+            headers: {
+                Accept: 'application/json',
+                Authorization: process.env.frontKeyMakro
+            },
+        },);
+
+
+        let maxLoop = Math.ceil(response.data.total_count / 100);
+        let allOrders = [...response.data.orders];
+        let totalCount = response.data.total_count;
+        // ถ้ามีแค่หน้าเดียว
+        if (maxLoop > 1) {
+            for (let i = 1; i < maxLoop; i++) {
+                let offset = i * 100;
+                const res = await axios.get(
+                    `${process.env.urlMakro}/api/orders?order_state_codes=SHIPPING&max=100&offset=${offset}&order=asc`,
+                    {
+                        headers: {
+                            Accept: 'application/json',
+                            Authorization: process.env.frontKeyMakro
+                        }
+                    }
+                );
+                allOrders.push(...res.data.orders);
+            }
+        }
+        const finalData = {
+            orders: allOrders,
+            total_count: totalCount
+        };
+        for (const order of finalData.orders) {
+            const existingOrder = await Order.findOne({
+                where: { number: order.commercial_id },
+            });
+            if (!existingOrder) {
+                console.warn(`❌ Order not found in DB: ${order.commercial_id}`);
+                continue; // ข้ามไปถ้าไม่เจอ order
+            }
+
+            const newOrder = {
+                id: existingOrder.id, // ✅ ใช้ id ที่หาได้จาก DB
+                number: order.commercial_id,
+                cono: 1,
+                invno: '1',
+                ordertype: '0',
+                status: order.order_state,
+                paymentstatus: order.references.order_reference_for_customer || '',
+                amount: order.total_price,
+                vatamount: ((order.total_price - (order.total_price / 1.07))).toFixed(2),
+                shippingamount: order.shipping_price,
+                orderdateString: formatDate(order.created_date),
+                paymentamount: '0',
+                description: '',
+                discount: '0',
+                platformdiscount: '0',
+                sellerdiscount: '0',
+                discountamount: 0,
+                voucheramount: 0,
+                vattype: 3,
+                saleschannel: 'Makro',
+                vatpercent: 7,
+                totalproductamount: order.total_price,
+                isDeposit: '0',
+                statusprint: '000',
+                statusPrininvSuccess: '000',
+            }
+            for (const orderLine of order.order_lines) {
+                const product = await Product.findOne({ where: { sku: orderLine.product_shop_sku } });
+                if (!product) {
+                    console.warn(`Not Found SKU: ${orderLine.product_shop_sku}`);
+                    continue;
+                }
+
+                await OrderDetail.create({
+                    id: newOrder.id,
+                    numberOrder: newOrder.number,
+                    productid: product.id,
+                    sku: orderLine.product_shop_sku,
+                    name: product.name,
+                    pricepernumber: orderLine.price_unit,
+                    totalprice: orderLine.total_price,
+                    number: orderLine.quantity,
+                    unittext: product.unittext,
+                    discountamount: orderLine.price - orderLine.total_price,
+                });
+
+                console.log(`Added Order Detail SKU: ${orderLine.product_shop_sku}`);
+            }
+        }
+        res.status(200).json({ message: "addOrderMakroProDetailFix" });
+
+    } catch (error) {
+        console.log(error)
+        res.status(500).json(error)
+    }
+})
 
 
 addOrderMakro.put('/addOrderMakroPro', async (req, res) => {
@@ -146,7 +260,7 @@ addOrderMakro.put('/addOrderMakroPro', async (req, res) => {
                         // newCustomerId = customer.customerid
                     }
                 }
-                
+
                 if (customerTaxId) {
                     customersToUpdate.push({
                         orderid: newOrderId,

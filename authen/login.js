@@ -63,7 +63,7 @@ router.post('/authen', async (req, res) => {
     const response = await axios.post(
       'https://apps.onetwotrading.co.th/12lmsapi/api/auth/login',
       { username, password },
-      { timeout: 8000 } // กัน timeout ค้าง
+      { timeout: 20000  } // กัน timeout ค้าง
     );
     const data = response.data;
 

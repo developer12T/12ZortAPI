@@ -77,7 +77,7 @@ const OrderDetail = sequelize.define('orderDetail', {
   number: { type: DataTypes.INTEGER, allowNull: true, },
   unittext: { type: DataTypes.STRING, collate: 'Thai_CI_AS', allowNull: true, },
   pricepernumber: { type: DataTypes.FLOAT, allowNull: true, },
-  discount: { type: DataTypes.STRING, collate: 'Thai_CI_AS', allowNull: true, },
+  discount: { type: DataTypes.FLOAT, collate: 'Thai_CI_AS', allowNull: true, },
   discountamount: { type: DataTypes.FLOAT, allowNull: true, },
   totalprice: { type: DataTypes.FLOAT, allowNull: true, },
   producttype: { type: DataTypes.FLOAT, allowNull: true, },
@@ -189,44 +189,44 @@ const OrderDetailHis = sequelize.define('orderDetailSuccessInsM3', {
 }, { freezeTableName: true, timestamps: false, createdAt: false, updatedAt: false, primaryKey: false })
 
 const LogOrderInSuccessM3 = sequelize.define('logOrderInSuccessM3', {
-  runId: { 
-    type: DataTypes.INTEGER, 
-    allowNull: false, 
-    primaryKey: true, 
-    autoIncrement: true 
+  runId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    primaryKey: true,
+    autoIncrement: true
   },
-  setNo: { 
-    type: DataTypes.INTEGER, 
-    allowNull: false, 
-    primaryKey: true 
+  setNo: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    primaryKey: true
   },
-  cono: { 
-    type: DataTypes.STRING, 
-    allowNull: true 
+  cono: {
+    type: DataTypes.STRING,
+    allowNull: true
   },
-  invno: { 
-    type: DataTypes.STRING, 
-    allowNull: true 
+  invno: {
+    type: DataTypes.STRING,
+    allowNull: true
   },
-  cuscode: { 
-    type: DataTypes.STRING, 
-    allowNull: true 
+  cuscode: {
+    type: DataTypes.STRING,
+    allowNull: true
   },
-  numberOrderRef: { 
-    type: DataTypes.STRING, 
-    allowNull: true 
+  numberOrderRef: {
+    type: DataTypes.STRING,
+    allowNull: true
   },
-  customerid: { 
-    type: DataTypes.STRING, 
-    allowNull: true 
+  customerid: {
+    type: DataTypes.STRING,
+    allowNull: true
   },
-  dateInsert: { 
-    type: DataTypes.STRING, 
-    allowNull: false, 
+  dateInsert: {
+    type: DataTypes.STRING,
+    allowNull: false,
   }
-}, { 
-  freezeTableName: true, 
-  timestamps: false 
+}, {
+  freezeTableName: true,
+  timestamps: false
 });
 
 
@@ -241,4 +241,4 @@ OrderHis.hasMany(OrderDetailHis, {
 });
 
 // sequelize.sync({force:false,alter:false}) 
-module.exports = { Order, OrderDetail, OrderHis, OrderDetailHis,LogOrderInSuccessM3 };
+module.exports = { Order, OrderDetail, OrderHis, OrderDetailHis, LogOrderInSuccessM3 };

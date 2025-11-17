@@ -62,7 +62,7 @@ try {
 
     for(const listofdetail of result){
       //  console.log(listofdetail.sku+' : '+listofdetail.number);
-      if(item.productid === undefined){
+      if(listofdetail.productid === undefined){
 
       }else{
       const preCutStorckcondition = await  axios.get(`https://open-api.zortout.com/v4/Product/GetProductDetail?id=${listofdetail.productid}`,{headers:headers})
