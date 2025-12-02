@@ -19,6 +19,11 @@ addDeatail.post('/addDeatail', async (req, res) => {
   try {
     const data = req.body.dataOrder
 
+    const fixDecimal = (num) => {
+      if (num == null) return null;
+      return Number(num).toFixed(2);
+    };
+
     if (data.sellerdiscount > 0) {
 
       var itemDisOnline = await axios.post(process.env.API_URL + '/M3API/ItemManage/Item/getItemDisOnline', {
@@ -88,13 +93,22 @@ addDeatail.post('/addDeatail', async (req, res) => {
     for (const list of mergedList) {
       // console.log(data.id) 
       let { auto_id, ...orderDatadetail } = list;
+      // orderDatadetail.id = data.id;
+      // orderDatadetail.numberOrder = data.number
+      // orderDatadetail.discount = data.discountamount + ''
+
       orderDatadetail.id = data.id;
-      orderDatadetail.numberOrder = data.number
-      orderDatadetail.discount = data.discountamount + ''
+      orderDatadetail.numberOrder = data.number;
+      orderDatadetail.discount = String(data.discountamount);
+
+      orderDatadetail.pricepernumber = fixDecimal(orderDatadetail.pricepernumber);
+      orderDatadetail.discountamount = fixDecimal(orderDatadetail.discountamount);
+      orderDatadetail.totalprice = fixDecimal(orderDatadetail.totalprice);
+      orderDatadetail.producttype = fixDecimal(orderDatadetail.producttype);
+
 
       // console.log('=======================================================test Group Data');
       // console.log(orderDatadetail);
-
 
 
       await OrderDetail.bulkCreate([orderDatadetail])

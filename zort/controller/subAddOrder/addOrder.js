@@ -32,7 +32,7 @@ addOrderNew.post('/addOrderNew', async (req, res) => {
    `;
 
     const rate = Number(data.vatpercent ?? 7) / 100;
-    const gross = Number(data.totalproductamount) || 0;
+    const gross = Number(data.amount) || 0;
 
     const vat = Number((gross - gross / (1 + rate)).toFixed(2));   // VAT amount
     const net = Number((gross / (1 + rate)).toFixed(2));            // Exclude VAT
@@ -41,7 +41,7 @@ addOrderNew.post('/addOrderNew', async (req, res) => {
     // value34: '' 
     const replacements = {
       value1: data.id, value11: data.amount, value21: data.shippingemail, value31: data.discount, value41: data.createdatetime, value51: data.properties,
-      value2: data.ordertype, value12: vat, value22: data.shippingpostcode, value32: data.platformdiscount, value42: data.createdatetimeString, value52: data.isDeposit,
+      value2: data.ordertype, value12: data.vatamount, value22: data.shippingpostcode, value32: data.platformdiscount, value42: data.createdatetimeString, value52: data.isDeposit,
       value3: data.number, value13: data.shippingvat, value23: data.shippingprovince, value33: data.sellerdiscount, value43: data.updatedatetime, value53: '000',
       value4: data.customerid, value14: data.shippingchannel, value24: data.shippingdistrict, value34: '', value44: data.updatedatetimeString, value54: '',
       value5: data.warehousecode, value15: data.shippingamount, value25: data.shippingsubdistrict, value35: data.discountamount, value45: data.expiredate, value55: '000',
@@ -51,7 +51,7 @@ addOrderNew.post('/addOrderNew', async (req, res) => {
       value9: data.marketplaceshippingstatus, value19: data.shippingaddress.substring(0, 255), value29: data.paymentamount, value39: data.vatpercent, value49: data.totalproductamount,
       value10: data.marketplacepayment, value20: data.shippingphone, value30: data.description, value40: data.isCOD, value50: data.uniquenumber,
     }
-    
+
     const result = await sequelize.query(query, {
       replacements,
       type: sequelize.QueryTypes.INSERT

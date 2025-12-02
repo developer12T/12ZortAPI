@@ -135,8 +135,14 @@ addDeatail.post('/addDeatail', async (req, res) => {
       const multiplier = Number(item?.sku?.split?.('_')?.[2]) || 1
       const adjustedPrice =
         multiplier > 1
-          ? Math.floor(item.pricepernumber / multiplier)
-          : Math.floor(item.pricepernumber); // ✅ ensure integer
+          ? Math.trunc((item.pricepernumber / multiplier) * 100) / 100
+          : Math.trunc(item.pricepernumber * 100) / 100;
+
+      // ❗ เพิ่ม discount แบบเดียวกัน
+      const adjustedDiscount =
+        multiplier > 1
+          ? Math.trunc((item.discountPerNumber / multiplier) * 100) / 100
+          : Math.trunc(item.discountPerNumber * 100) / 100;
       // const key = `${item.productid}`;
       // const key = `${item.productid}_${item.sku}`;
       const key = `${item.productid}_${item.sku}_${item.pricepernumber}_${item.discount}`;
@@ -144,7 +150,8 @@ addDeatail.post('/addDeatail', async (req, res) => {
         mergedData[key] = {
           ...item,
           number: item.number * multiplier,
-          pricepernumber: adjustedPrice
+          pricepernumber: adjustedPrice,
+          discount: adjustedDiscount
         };
       } else {
         mergedData[key].number += item.number * multiplier;
@@ -152,12 +159,13 @@ addDeatail.post('/addDeatail', async (req, res) => {
         mergedData[key].pricepernumber_pretax += item.pricepernumber_pretax;
         mergedData[key].pricepernumber_vat += item.pricepernumber_vat;
         mergedData[key].totalprice += item.totalprice;
+        // mergedData[key].discount += adjustedDiscount;
       }
     });
 
 
 
-    // if (data.saleschannel == 'Shopee' || data.saleschannel == 'Shopee Termtip') {
+    // if (data.saleschannel == 'TIKTOK') {
     //   const productIds = Object.values(mergedData).map(i => i.productid);
     //   const products = await Product.findAll({
     //     where: {
@@ -234,32 +242,9 @@ addDeatail.post('/addDeatail', async (req, res) => {
         where: { id: { [Op.in]: productIds } }
       });
 
-
       // 3) ทำ Map เพื่อค้นหาง่าย
       const productMap = _.keyBy(products, 'id');
       // 4) Loop mergedData แล้วสร้างราคาต้นตั้ง (original) + คำนวณส่วนต่าง
-      // for (const key in mergedList) {
-      //   const item = mergedList[key];
-      //   const multiplier = Number(item?.sku?.split?.('_')?.[2]) || 1;
-      //   const product = productMap[item.productid];
-
-      //   if (product) {
-
-      //     // ราคาต้นตั้งตามฐาน
-      //     const originalTotalPrice = (product.sellprice * item.number) / multiplier;
-      //     const originalPricePerNumber = product.sellprice / multiplier;
-
-      //     // เก็บค่า original เข้า item
-      //     item.originalTotalPrice = originalTotalPrice;
-      //     item.originalPricePerNumber = originalPricePerNumber;
-
-      //     // ราคาที่ส่งมาคือ item.totalprice (ของเดิม)
-      //     const sentPrice = Number(item.totalprice) || 0;
-
-      //     // ส่วนต่างของตัวนี้
-      //     item.diff = originalTotalPrice - sentPrice;
-      //   }
-      // }
       // ใช้ for-of แทน
       for (const item of mergedList) {
         const multiplier = Number(item?.sku?.split?.('_')?.[2]) || 1;
@@ -307,10 +292,6 @@ addDeatail.post('/addDeatail', async (req, res) => {
         });
 
         if (!existDis) {
-          // let index = 1;
-          // for (const item of mergedList) {
-          //   item.itemNo = index++;
-          // }
           await OrderDetail.create({
             id: data.id,
             numberOrder: data.number,
@@ -322,6 +303,17 @@ addDeatail.post('/addDeatail', async (req, res) => {
             pricepernumber: diffSummary,
             totalprice: diffSummary
           });
+
+          for (const item of mergedList) {
+            const multiplier = Number(item?.sku?.split?.('_')?.[2]) || 1;
+            const product = productMap[Number(item.productid)];
+
+            if (product) {
+              item.totalprice = (product.sellprice * item.number) / multiplier;
+              item.pricepernumber = product.sellprice / multiplier;
+              item.discount = product.discountPerNumber / multiplier;
+            }
+          }
         }
       }
     }
@@ -351,14 +343,29 @@ addDeatail.post('/addDeatail', async (req, res) => {
       return data;
     }
 
+    const fixDecimal = (num) => {
+      if (num == null) return null;
+      return Number(num).toFixed(2);
+    };
+
+
 
     for (const list of mergedList) {
       let { auto_id, originalTotalPrice,
         diff,
         originalPricePerNumber, ...orderDatadetail } = list;
+      // orderDatadetail.id = data.id;
+      // orderDatadetail.numberOrder = data.number
+      // orderDatadetail.discount = Number(orderDatadetail.discount) || 0;
+
       orderDatadetail.id = data.id;
-      orderDatadetail.numberOrder = data.number
-      orderDatadetail.discount = Number(orderDatadetail.discount) || 0;
+      orderDatadetail.numberOrder = data.number;
+      orderDatadetail.discount = fixDecimal(orderDatadetail.discount);
+
+      orderDatadetail.pricepernumber = fixDecimal(orderDatadetail.pricepernumber);
+      orderDatadetail.discountamount = fixDecimal(orderDatadetail.discountamount);
+      orderDatadetail.totalprice = fixDecimal(orderDatadetail.totalprice);
+      orderDatadetail.producttype = fixDecimal(orderDatadetail.producttype);
       // orderDatadetail.discount = data.discountamount+''
 
       console.log('==================test Group Data');

@@ -9,7 +9,8 @@ const orderAmazeAll = async (req, res) => {
         }, {
             headers: {
                 'Content-Type': 'application/json',
-                'Accept': 'application/json'
+                'Accept': 'application/json',
+                'User-Agent': "openapi_seller"
             }
         });
 
@@ -24,7 +25,8 @@ const orderAmazeAll = async (req, res) => {
         const orderResponse = await axios.get(process.env.urlAmaze + '/open-console/api/v2/client/order?status=ready_to_ship', {
             headers: {
                 Accept: 'application/json',
-                Authorization: `Bearer ${accessToken}`
+                Authorization: `Bearer ${accessToken}`,
+                'User-Agent': "openapi_seller_545"
             },
         });
 

@@ -92,28 +92,38 @@ getOrderErp.post('/getOrderErp', async (req, res) => {
     }),
 
 
+
     getOrderErp.post('/getOrderExcel', async (req, res) => {
+
+
         try {
+
+            function formatDate(date) {
+                return date.toISOString().slice(0, 19).replace('T', ' ');
+            };
             const { fromDate, toDate } = req.body;
+
             // ตัวอย่างค่าที่ส่งมาใน body:
             // { "fromDate": "2025-11-01", "toDate": "2025-11-06" }
 
             // ✅ ตรวจสอบค่าที่ส่งมา
+
             if (!fromDate || !toDate) {
                 return res.status(400).json({ message: 'กรุณาระบุ fromDate และ toDate' });
             }
 
-            // ✅ แปลง string เป็น Date object
-            const start = new Date(fromDate);
-            const end = new Date(toDate);
-            end.setHours(23, 59, 59, 999); // ครอบคลุมทั้งวัน
+            const start = new Date(`${fromDate}T00:00:00`);
+            const end = new Date(`${toDate}T23:59:59`);
+
+            const startStr = formatDate(start); // ไม่มี timezone
+            const endStr = formatDate(end);     // ไม่มี timezone
 
             // ✅ ดึงข้อมูลระหว่างวันที่
             const orderHis = await OrderHis.findAll({
                 attributes: ['id', 'status', 'paymentstatus', 'createdAt'],
                 where: {
                     status: { [Op.notIn]: ['Success', 'Voided'] },
-                    createdAt: { [Op.between]: [start, end] }, // ✅ เลือกระหว่างวันที่
+                    createdAt: { [Op.between]: [startStr, endStr] }, // ✅ เลือกระหว่างวันที่
                 },
                 raw: true,
             });
